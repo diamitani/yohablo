@@ -1,6 +1,34 @@
 import type { Lesson } from "@/lib/types"
 
 export const lessons: Lesson[] = [
+  // Colors lesson - matching the URL
+  {
+    id: "7",
+    slug: "colors-colores",
+    title: "Colors (Colores)",
+    description: "Master Spanish color vocabulary with catchy music.",
+    videoUrl: "https://www.youtube.com/watch?v=l0W4vdQKYbI",
+    worksheetUrl: "#",
+    audioUrl: null,
+    progress: 30,
+    category: "Un Día en La Vida",
+    learningPoints: ["Basic color names in Spanish", "Color adjective agreement", "Describing objects using colors"],
+    vocabularyWords: [
+      "Verde",
+      "Negro",
+      "Azul",
+      "Blanco",
+      "Morado",
+      "Anaranjado",
+      "Rojo",
+      "Marrón",
+      "Amarillo",
+      "Gris",
+      "Rosado",
+    ],
+    thumbnail: "/spanish-colors-rainbow-lesson.png",
+  },
+
   // Original lesson
   {
     id: "1",
@@ -512,32 +540,6 @@ export const lessons: Lesson[] = [
       "Hace fresco",
       "El tiempo",
     ],
-  },
-  {
-    id: "7",
-    slug: "colores",
-    title: "Colors (Colores)",
-    description: "Master Spanish color vocabulary with catchy music.",
-    videoUrl: "https://www.youtube.com/watch?v=l0W4vdQKYbI",
-    worksheetUrl: "#",
-    audioUrl: null,
-    progress: 30,
-    category: "Un Día en La Vida",
-    learningPoints: ["Basic color names in Spanish", "Color adjective agreement", "Describing objects using colors"],
-    vocabularyWords: [
-      "Verde",
-      "Negro",
-      "Azul",
-      "Blanco",
-      "Morado",
-      "Anaranjado",
-      "Rojo",
-      "Marrón",
-      "Amarillo",
-      "Gris",
-      "Rosado",
-    ],
-    thumbnail: "/spanish-colors-rainbow-lesson.png",
   },
   {
     id: "8",
@@ -1068,7 +1070,7 @@ export function getFeaturedLessons(): Lesson[] {
   return [
     lessons.find((l) => l.slug === "alfabeto")!,
     lessons.find((l) => l.slug === "numeros")!,
-    lessons.find((l) => l.slug === "colores")!,
+    lessons.find((l) => l.slug === "colors-colores")!,
     lessons.find((l) => l.slug === "cuerpo")!,
     lessons.find((l) => l.slug === "juli-slide-alphabet")!,
     lessons.find((l) => l.slug === "espanoletry-adjectives")!,
