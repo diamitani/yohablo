@@ -6,49 +6,29 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Volume2, Loader2, Zap } from "lucide-react"
+import { Volume2, Loader2, Sparkles, BookOpen } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { generateTTS, getAvailableVoices } from "@/app/api/tts/actions"
+import { spanishVoices } from "@/lib/services/gemini-tts-service"
 
 interface TextToSpeechProps {
   defaultText?: string
   defaultVoice?: string
 }
 
-export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B" }: TextToSpeechProps) {
+export function TextToSpeech({ defaultText = "", defaultVoice = "es-female-1" }: TextToSpeechProps) {
   const { toast } = useToast()
   const [text, setText] = useState(defaultText)
   const [voice, setVoice] = useState(defaultVoice)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [voices, setVoices] = useState<{ id: string; name: string; provider: string }[]>([])
-
-  useEffect(() => {
-    // Fetch available Google voices ONLY
-    const loadVoices = async () => {
-      try {
-        const availableVoices = await getAvailableVoices()
-        setVoices(availableVoices)
-      } catch (error) {
-        console.error("Failed to load Google voices:", error)
-        // Fallback to default Google voices
-        setVoices([
-          { id: "es-US-Neural2-B", name: "Diego (Male - US)", provider: "google" },
-          { id: "es-US-Neural2-A", name: "María (Female - US)", provider: "google" },
-          { id: "es-ES-Neural2-B", name: "Alejandro (Male - Spain)", provider: "google" },
-          { id: "es-ES-Neural2-A", name: "Carmen (Female - Spain)", provider: "google" },
-        ])
-      }
-    }
-
-    loadVoices()
-  }, [])
+  const [pronunciation, setPronunciation] = useState<string>("")
+  const [tips, setTips] = useState<string>("")
 
   const handleGenerate = async () => {
     if (!text.trim()) {
       toast({
         title: "Missing text",
-        description: "Please enter some text to convert to speech.",
+        description: "Please enter some Spanish text to convert to speech.",
         variant: "destructive",
       })
       return
@@ -58,30 +38,41 @@ export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B
     setAudioUrl(null)
 
     try {
-      // Generate using ONLY Google TTS
-      const result = await generateTTS(text, { voice })
+      const response = await fetch("/api/tts/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          voice,
+          languageCode: "es-US",
+        }),
+      })
+
+      const result = await response.json()
 
       if (result.success && result.audioUrl) {
         setAudioUrl(result.audioUrl)
         toast({
           title: "Speech Generated Successfully",
-          description: "Your Spanish audio has been generated using Google Text-to-Speech.",
+          description: "Your Spanish audio has been generated using Gemini AI.",
           duration: 3000,
         })
       } else {
-        console.error("Google TTS generation failed:", result.error)
+        console.error("Gemini TTS generation failed:", result.error)
         toast({
           title: "Error Generating Speech",
-          description: result.error || "Failed to generate speech with Google TTS. Please try again.",
+          description: result.error || "Failed to generate speech with Gemini AI. Please try again.",
           variant: "destructive",
         })
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      console.error("Error generating speech with Google TTS:", errorMessage)
+      console.error("Error generating speech with Gemini:", errorMessage)
       toast({
         title: "Error",
-        description: `Google TTS error: ${errorMessage}. Please try again.`,
+        description: `Gemini TTS error: ${errorMessage}. Please try again.`,
         variant: "destructive",
       })
     } finally {
@@ -89,13 +80,48 @@ export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B
     }
   }
 
+  const handleGetPronunciation = async () => {
+    if (!text.trim()) return
+
+    try {
+      const response = await fetch("/api/tts/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          action: "pronunciation",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setPronunciation(result.pronunciation || "")
+        setTips(result.tips || "")
+      }
+    } catch (error) {
+      console.error("Error getting pronunciation:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (text.trim()) {
+      const timer = setTimeout(() => {
+        handleGetPronunciation()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [text])
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-blue-500" />
+          <Sparkles className="h-5 w-5 text-purple-500" />
           Text to Speech
-          <span className="text-sm font-normal text-muted-foreground">(Powered by Google TTS)</span>
+          <span className="text-sm font-normal text-muted-foreground">(Powered by Gemini AI)</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -107,16 +133,18 @@ export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={4}
+            className="resize-none"
           />
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="voice">Google Voice</Label>
+          <Label htmlFor="voice">Voice</Label>
           <Select value={voice} onValueChange={setVoice}>
             <SelectTrigger id="voice">
-              <SelectValue placeholder="Select a Google voice" />
+              <SelectValue placeholder="Select a voice" />
             </SelectTrigger>
             <SelectContent>
-              {voices.map((v) => (
+              {spanishVoices.map((v) => (
                 <SelectItem key={v.id} value={v.id}>
                   {v.name}
                 </SelectItem>
@@ -124,6 +152,17 @@ export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B
             </SelectContent>
           </Select>
         </div>
+
+        {pronunciation && (
+          <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-blue-600" />
+              <Label className="text-blue-800 dark:text-blue-200">Pronunciation Guide</Label>
+            </div>
+            <p className="text-sm text-blue-700 dark:text-blue-300 font-mono">{pronunciation}</p>
+            {tips && <p className="text-xs text-blue-600 dark:text-blue-400">{tips}</p>}
+          </div>
+        )}
 
         {audioUrl && (
           <div className="pt-4">
@@ -138,7 +177,7 @@ export function TextToSpeech({ defaultText = "", defaultVoice = "es-US-Neural2-B
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating with Google TTS...
+              Generating with Gemini AI...
             </>
           ) : (
             <>

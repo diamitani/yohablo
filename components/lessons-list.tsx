@@ -66,18 +66,10 @@ export function LessonsList() {
 
   const counts = getContentTypeCounts()
 
-  // Get the primary content type for each lesson for better display
-  const getPrimaryContentType = (lesson: any) => {
-    if (lesson.videoUrl && lesson.videoUrl.trim() !== "") return "video"
-    if (lesson.audioUrl && lesson.audioUrl.trim() !== "") return "audio"
-    if (lesson.worksheetUrl && lesson.worksheetUrl.trim() !== "" && lesson.worksheetUrl !== "#") return "worksheet"
-    return "other"
-  }
-
   return (
-    <div className="space-y-8">
-      {/* Filter Type Selector */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8">
+      {/* Mobile-optimized Filter Section */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Filter Lessons</h3>
@@ -90,12 +82,16 @@ export function LessonsList() {
           className="w-full"
         >
           <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="content">By Content Type</TabsTrigger>
-            <TabsTrigger value="category">By Category</TabsTrigger>
+            <TabsTrigger value="content" className="text-sm">
+              By Content
+            </TabsTrigger>
+            <TabsTrigger value="category" className="text-sm">
+              By Category
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {/* Content Type Filter */}
+        {/* Content Type Filter - Mobile Optimized */}
         {filterType === "content" && (
           <div className="mt-4">
             <Tabs
@@ -104,12 +100,17 @@ export function LessonsList() {
               onValueChange={setSelectedContentType}
               className="w-full"
             >
-              <TabsList className="w-full overflow-auto">
+              <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 gap-1">
                 {contentTypes.map((type) => (
-                  <TabsTrigger key={type.id} value={type.id} className="min-w-max flex items-center">
-                    {type.icon}
-                    <span>{type.label}</span>
-                    <Badge variant="secondary" className="ml-2 text-xs">
+                  <TabsTrigger
+                    key={type.id}
+                    value={type.id}
+                    className="flex flex-col items-center p-2 text-xs sm:text-sm min-h-[60px] sm:min-h-[40px]"
+                  >
+                    <div className="flex items-center justify-center mb-1 sm:mb-0 sm:mr-2">{type.icon}</div>
+                    <span className="hidden sm:inline">{type.label}</span>
+                    <span className="sm:hidden text-xs">{type.label.split(" ")[0]}</span>
+                    <Badge variant="secondary" className="mt-1 sm:mt-0 sm:ml-2 text-xs">
                       {type.id === "all"
                         ? counts.total
                         : type.id === "video"
@@ -127,14 +128,14 @@ export function LessonsList() {
           </div>
         )}
 
-        {/* Category Filter */}
+        {/* Category Filter - Mobile Optimized */}
         {filterType === "category" && (
           <div className="mt-4">
             <Tabs defaultValue="all" value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-              <TabsList className="w-full overflow-auto">
+              <TabsList className="w-full flex flex-wrap gap-1 h-auto p-1">
                 {categories.map((category) => (
-                  <TabsTrigger key={category} value={category} className="min-w-max">
-                    {category === "all" ? "All Categories" : category}
+                  <TabsTrigger key={category} value={category} className="text-xs sm:text-sm px-2 py-1 min-w-max">
+                    {category === "all" ? "All" : category}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -143,23 +144,23 @@ export function LessonsList() {
         )}
       </div>
 
-      {/* Results Summary */}
-      <div className="flex items-center justify-between">
+      {/* Results Summary - Mobile Optimized */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-xl sm:text-2xl font-bold">
             {filterType === "content" && selectedContentType !== "all"
               ? `${contentTypes.find((t) => t.id === selectedContentType)?.label} Lessons`
               : filterType === "category" && selectedCategory !== "all"
                 ? `${selectedCategory} Lessons`
                 : "All Lessons"}
           </h2>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Showing {filteredLessons.length} of {lessons.length} lessons
           </p>
         </div>
 
         {filterType === "content" && selectedContentType !== "all" && (
-          <Badge variant="outline" className="text-sm">
+          <Badge variant="outline" className="text-xs sm:text-sm self-start sm:self-center">
             {selectedContentType === "video" && "Video Content Only"}
             {selectedContentType === "audio" && "Audio Content Only"}
             {selectedContentType === "worksheet" && "Worksheet Content Only"}
@@ -167,8 +168,8 @@ export function LessonsList() {
         )}
       </div>
 
-      {/* Lessons Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Lessons Grid - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredLessons.map((lesson) => (
           <LessonCard
             key={lesson.id}
@@ -179,19 +180,23 @@ export function LessonsList() {
         ))}
       </div>
 
-      {/* No Results State */}
+      {/* No Results State - Mobile Optimized */}
       {filteredLessons.length === 0 && (
-        <div className="text-center py-16">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
+        <div className="text-center py-12 sm:py-16">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 sm:p-8 max-w-md mx-auto">
             <div className="text-gray-400 mb-4">
-              {filterType === "content" && selectedContentType === "video" && <Video className="h-12 w-12 mx-auto" />}
-              {filterType === "content" && selectedContentType === "audio" && <Music className="h-12 w-12 mx-auto" />}
+              {filterType === "content" && selectedContentType === "video" && (
+                <Video className="h-10 w-10 sm:h-12 sm:w-12 mx-auto" />
+              )}
+              {filterType === "content" && selectedContentType === "audio" && (
+                <Music className="h-10 w-10 sm:h-12 sm:w-12 mx-auto" />
+              )}
               {filterType === "content" && selectedContentType === "worksheet" && (
-                <FileText className="h-12 w-12 mx-auto" />
+                <FileText className="h-10 w-10 sm:h-12 sm:w-12 mx-auto" />
               )}
             </div>
-            <h3 className="text-xl font-bold mb-2">No lessons found</h3>
-            <p className="text-muted-foreground mb-4">
+            <h3 className="text-lg sm:text-xl font-bold mb-2">No lessons found</h3>
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
               {filterType === "content" &&
                 selectedContentType === "video" &&
                 "No video lessons are currently available."}
@@ -208,7 +213,7 @@ export function LessonsList() {
                 setSelectedContentType("all")
                 setSelectedCategory("all")
               }}
-              className="text-primary hover:underline"
+              className="text-primary hover:underline text-sm sm:text-base"
             >
               View all lessons
             </button>

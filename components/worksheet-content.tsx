@@ -28,6 +28,7 @@ export function WorksheetContent({ title, content, type, lessonSlug }: Worksheet
   const [isChecked, setIsChecked] = useState(false)
   const [score, setScore] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<"worksheet" | "vocabulary">("worksheet")
+  const [showAnswers, setShowAnswers] = useState(false)
 
   // Extract vocabulary words from the worksheet content
   const vocabularyWords = extractVocabularyWords(worksheetItems)
@@ -75,6 +76,15 @@ export function WorksheetContent({ title, content, type, lessonSlug }: Worksheet
           >
             <Printer className="h-4 w-4" />
             Print
+          </Button>
+          <Button
+            variant={showAnswers ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowAnswers(!showAnswers)}
+            className="flex items-center gap-2"
+          >
+            <Check className="h-4 w-4" />
+            {showAnswers ? "Hide" : "Show"} Answers
           </Button>
           <Button
             variant={activeTab === "worksheet" ? "default" : "outline"}
@@ -152,15 +162,15 @@ export function WorksheetContent({ title, content, type, lessonSlug }: Worksheet
                             : ""
                         }
                       />
-                      {isChecked && (
+                      {(isChecked || showAnswers) && (
                         <div className="flex items-center gap-2">
-                          {item.userAnswer?.trim().toLowerCase() === item.answer.trim().toLowerCase() ? (
+                          {isChecked && item.userAnswer?.trim().toLowerCase() === item.answer.trim().toLowerCase() ? (
                             <Badge className="saas-status-success">Correct!</Badge>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <Badge className="saas-status-error">Incorrect</Badge>
+                              {isChecked && <Badge className="saas-status-error">Incorrect</Badge>}
                               <span className="saas-body-small">
-                                Answer: <span className="font-semibold">{item.answer}</span>
+                                Answer: <span className="font-semibold text-green-600">{item.answer}</span>
                               </span>
                             </div>
                           )}
@@ -176,7 +186,7 @@ export function WorksheetContent({ title, content, type, lessonSlug }: Worksheet
 
           {/* Actions */}
           <div className="flex justify-between items-center">
-            <Button variant="outline" onClick={resetWorksheet} className="flex items-center gap-2">
+            <Button variant="outline" onClick={resetWorksheet} className="flex items-center gap-2 bg-transparent">
               <RefreshCw className="h-4 w-4" />
               Reset
             </Button>
@@ -288,10 +298,10 @@ function extractVocabularyWords(items: WorksheetItem[]): string[] {
   // Also try to extract words from questions that are in parentheses or after "that's"
   items.forEach((item) => {
     // Match words in parentheses
-    const parenthesesMatches = item.question.match(/$$([^)]+)$$/g)
+    const parenthesesMatches = item.question.match(/\$$$([^)]+)$$\$/g)
     if (parenthesesMatches) {
       parenthesesMatches.forEach((match) => {
-        const word = match.replace(/[()]/g, "").trim()
+        const word = match.replace(/[()$]/g, "").trim()
         if (word && !word.match(/^\d+$/)) words.add(word)
       })
     }

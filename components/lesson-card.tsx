@@ -146,7 +146,7 @@ export function LessonCard({ lesson, showProgress = false, contentTypeFilter }: 
 
               {/* Content overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 mb-3 group-hover:scale-110 transition-transform duration-300">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
                   <Headphones className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex items-center gap-2 text-sm opacity-90">
@@ -162,7 +162,7 @@ export function LessonCard({ lesson, showProgress = false, contentTypeFilter }: 
 
               {/* Audio indicator */}
               <div className="absolute top-3 right-3">
-                <div className="bg-black/30 backdrop-blur-sm text-white p-1.5 rounded-md">
+                <div className="bg-black/70 text-white p-1.5 rounded-md backdrop-blur-sm">
                   <Music className="h-3 w-3" />
                 </div>
               </div>

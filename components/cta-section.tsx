@@ -1,32 +1,43 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
+import { ArrowRight, BookOpen, Users } from "lucide-react"
 import Link from "next/link"
 
 export function CTASection() {
   return (
-    <section className="py-20 bg-primary text-primary-foreground">
+    <section className="py-16 sm:py-20 bg-gradient-to-r from-blue-600 to-purple-600">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-6 text-center max-w-4xl mx-auto">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Ready to Start Learning?</h2>
-            <p className="max-w-[700px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Join thousands of students who are learning Spanish through hip hop with Yo Hablo.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/lessons">
-              <Button size="lg" variant="secondary" className="px-8">
-                Browse Lessons
+        <div className="text-center space-y-6 max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white">Ready to Transform Your Spanish Learning?</h2>
+          <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto">
+            Join thousands of students and teachers who are already learning Spanish through music. Start your journey
+            today with our interactive lessons and engaging content.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Link href="/register/student">
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                <Users className="mr-2 h-5 w-5" />
+                Join as Student
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/about">
+            <Link href="/register/teacher">
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-primary-foreground/10 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/20 px-8"
+                className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
-                Learn More
+                <BookOpen className="mr-2 h-5 w-5" />
+                Join as Teacher
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+          </div>
+
+          <div className="pt-8 text-center">
+            <p className="text-blue-100 text-sm">Free to get started • No credit card required • Cancel anytime</p>
           </div>
         </div>
       </div>

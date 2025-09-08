@@ -1,241 +1,141 @@
 "use client"
 
-import * as React from "react"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { Menu, X, User, LogIn, UserPlus } from "lucide-react" // Added Music2
-
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu, User, LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-  const pathname = usePathname()
-  const { user, isStudent, isTeacher, logout, isAuthenticated } = useAuth() // Added isAuthenticated
+  const [isOpen, setIsOpen] = useState(false)
+  const { user, logout } = useAuth()
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
-
-  const closeMenu = () => {
-    setIsMenuOpen(false)
-  }
-
-  const isActive = (path: string) => {
-    // Handle base path and specific paths
-    if (path === "/") return pathname === path
-    return pathname.startsWith(path)
-  }
-
-  const navLinks = [
-    { href: "/lesson-plans", label: "Lesson Plans" },
-    { href: "/lessons", label: "Browse Content" },
-    { href: "/worksheets", label: "Worksheets" },
-    { href: "/videos", label: "Videos" },
-    { href: "/audio", label: "Audio" }, // Added Audio link
-    { href: "/contest", label: "Song Contest" },
-    { href: "/about", label: "About" },
+  const navigation = [
+    { name: "Lessons", href: "/lessons" },
+    { name: "Worksheets", href: "/worksheets" },
+    { name: "Contest", href: "/contest" },
+    { name: "About", href: "/about" },
   ]
 
-  const teacherLinks = [{ href: "/create-lesson", label: "Create Content" }]
+  const handleLogout = () => {
+    logout()
+    setIsOpen(false)
+  }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6 md:gap-8 lg:gap-10">
-          <Link href="/" className="flex items-center space-x-2" onClick={closeMenu}>
-            <Image
-              src="/yo-hablo-logo.png"
-              alt="Yo Hablo Logo"
-              width={140}
-              height={40}
-              className="h-10 w-auto"
-              priority
-            />
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <Image src="/yo-hablo-logo.png" alt="Yo Hablo" width={40} height={40} className="rounded-lg" />
+            <span className="text-xl font-bold">Yo Hablo</span>
           </Link>
-          <nav className="hidden md:flex gap-6">
-            {navLinks.map((link) => (
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  isActive(link.href) ? "text-primary" : "text-muted-foreground",
-                )}
+                key={item.name}
+                href={item.href}
+                className="text-sm font-medium transition-colors hover:text-primary"
               >
-                {link.label}
+                {item.name}
               </Link>
             ))}
-            {isAuthenticated &&
-              isTeacher() &&
-              teacherLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
-                    isActive(link.href) ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
           </nav>
-        </div>
 
-        <div className="flex items-center gap-4">
-          {isAuthenticated && user ? ( // Check isAuthenticated as well
-            <div className="hidden md:flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {user.name || user.email}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex flex-col space-y-1 p-2">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    <p className="text-xs leading-none text-muted-foreground capitalize">{user.role}</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <Link href="/login">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Login
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/dashboard">
+                    <User className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
                 </Button>
-              </Link>
-              <Link href="/register/teacher">
-                <Button size="sm" className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Join as Teacher
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
                 </Button>
-              </Link>
-            </div>
-          )}
-
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleMenu}>
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/register/student">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
+
+          {/* Mobile Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="sm">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="flex flex-col space-y-6 mt-6">
+                <div className="flex items-center space-x-2">
+                  <Image src="/yo-hablo-logo.png" alt="Yo Hablo" width={32} height={32} className="rounded-lg" />
+                  <span className="text-lg font-bold">Yo Hablo</span>
+                </div>
+
+                <nav className="flex flex-col space-y-4">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="text-sm font-medium transition-colors hover:text-primary py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </nav>
+
+                <div className="border-t pt-6">
+                  {user ? (
+                    <div className="flex flex-col space-y-3">
+                      <Button asChild variant="ghost" className="justify-start">
+                        <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                          <User className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="justify-start bg-transparent" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-3">
+                      <Button asChild variant="ghost" className="justify-start">
+                        <Link href="/login" onClick={() => setIsOpen(false)}>
+                          Login
+                        </Link>
+                      </Button>
+                      <Button asChild className="justify-start">
+                        <Link href="/register/student" onClick={() => setIsOpen(false)}>
+                          Sign Up Free
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {isMenuOpen && (
-        <div className="fixed inset-0 top-16 z-50 bg-background md:hidden">
-          <div className="container py-4">
-            <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={toggleMenu}>
-              <X className="h-6 w-6" />
-              <span className="sr-only">Close menu</span>
-            </Button>
-            <nav className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "text-lg font-medium transition-colors hover:text-primary",
-                    isActive(link.href) ? "text-primary" : "text-muted-foreground",
-                  )}
-                  onClick={closeMenu}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {isAuthenticated &&
-                isTeacher() &&
-                teacherLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      "text-lg font-medium transition-colors hover:text-primary",
-                      isActive(link.href) ? "text-primary" : "text-muted-foreground",
-                    )}
-                    onClick={closeMenu}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-
-              <div className="border-t pt-4 mt-4">
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="mb-4 p-2 bg-muted rounded">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
-                    </div>
-                    <Link
-                      href="/dashboard"
-                      className={cn(
-                        "block text-lg font-medium transition-colors hover:text-primary mb-4",
-                        isActive("/dashboard") ? "text-primary" : "text-muted-foreground",
-                      )}
-                      onClick={closeMenu}
-                    >
-                      Dashboard
-                    </Link>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        logout()
-                        closeMenu()
-                      }}
-                      className="w-full justify-start"
-                    >
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <div className="space-y-2">
-                    <Link href="/login" onClick={closeMenu}>
-                      <Button variant="outline" className="w-full justify-start">
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Login
-                      </Button>
-                    </Link>
-                    <Link href="/register/teacher" onClick={closeMenu}>
-                      <Button className="w-full justify-start">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Join as Teacher
-                      </Button>
-                    </Link>
-                    <Link href="/register/student" onClick={closeMenu}>
-                      <Button variant="outline" className="w-full justify-start">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Join as Student
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </nav>
-          </div>
-        </div>
-      )}
     </header>
   )
 }
