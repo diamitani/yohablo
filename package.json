@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/xai": "latest",
-    "@google-cloud/text-to-speech": "6.3.0",
+    "@google-cloud/text-to-speech": "latest",
     "@google/generative-ai": "latest",
     "@hookform/resolvers": "latest",
     "@radix-ui/react-accordion": "1.2.2",

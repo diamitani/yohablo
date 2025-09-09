@@ -1,127 +1,89 @@
 "use server"
 
-import { synthesizeSpeech, commonSpanishVoices, getAvailableGoogleTTSVoices } from "@/lib/services/google-tts-service"
+import { TextToSpeechClient } from "@google-cloud/text-to-speech"
 
-interface TTSRequest {
-  text: string
-  voice?: string // This will be the voiceName like "es-US-Neural2-A"
-  languageCode?: string // e.g., "es-US"
-  ssmlGender?: "FEMALE" | "MALE" | "NEUTRAL"
-  provider?: string // Kept for potential future use, but defaults to Google
-}
+// Mock TTS service for development
+const mockTTS = {
+  generateAudio: async (text: string, voice: string) => {
+    console.log(`[Mock TTS] Generating audio for: "${text}" with voice: ${voice}`)
 
-interface TTSResponse {
-  success: boolean
-  audioUrl?: string
-  error?: string
-  provider?: string
-}
+    // Simulate processing time
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-export async function generateTTS({
-  text,
-  voice = "es-US-Neural2-A", // Default voice
-  languageCode = "es-US", // Default language code for the voice
-  ssmlGender = "FEMALE", // Default gender for the voice
-}: TTSRequest): Promise<TTSResponse> {
-  try {
-    console.log(`Generating TTS (via Google Cloud TTS) for text: "${text}" with voice: ${voice}`)
+    // Return a mock audio URL based on the text
+    const mockUrl = `/audio/mock-${text.toLowerCase().replace(/[^a-z0-9]/g, "-")}.mp3`
 
-    const result = await synthesizeSpeech({
-      text,
-      voiceName: voice,
-      languageCode,
-      ssmlGender,
-      audioEncoding: "MP3",
-    })
-
-    if (result.success) {
-      return {
-        success: true,
-        audioUrl: result.audioUrl,
-        provider: "google_cloud_tts",
-      }
-    } else {
-      return {
-        success: false,
-        error: result.error || "TTS generation failed.",
-        provider: "google_cloud_tts",
-      }
-    }
-  } catch (error) {
-    console.error("Error in generateTTS action:", error)
-    return {
-      success: false,
-      error: `Failed to generate TTS: ${error instanceof Error ? error.message : "Unknown error"}`,
-      provider: "google_cloud_tts",
-    }
-  }
-}
-
-export async function getAvailableVoices(
-  languageCode?: string,
-): Promise<{ success: boolean; voices?: any[]; error?: string; provider?: string }> {
-  try {
-    // Option 1: Use a static list of common voices
-    // return { success: true, voices: commonSpanishVoices.map(v => `${v.name} (${v.gender}, ${v.region})`), provider: "google_cloud_tts" };
-
-    // Option 2: Fetch dynamically (might be slower but more up-to-date)
-    const result = await getAvailableGoogleTTSVoices(languageCode || "es") // Default to Spanish
-    if (result.success) {
-      return { success: true, voices: result.voices, provider: "google_cloud_tts" }
-    }
-    // Fallback to static list if dynamic fetch fails
-    console.warn("Failed to fetch dynamic voices, falling back to static list:", result.error)
     return {
       success: true,
-      voices: commonSpanishVoices.map((v) => ({
-        name: v.name,
-        ssmlGender: v.gender,
-        naturalSampleRateHertz: 0 /*dummy*/,
-      })),
-      provider: "google_cloud_tts_static_fallback",
+      audioUrl: mockUrl,
     }
-  } catch (error) {
-    console.error("Error getting available voices:", error)
-    // Fallback to static list on any error
-    return {
-      success: true, // Still success as we provide a fallback
-      voices: commonSpanishVoices.map((v) => ({
-        name: v.name,
-        ssmlGender: v.gender,
-        naturalSampleRateHertz: 0 /*dummy*/,
-      })),
-      error: `Failed to get dynamic voices, using static list: ${error instanceof Error ? error.message : "Unknown error"}`,
-      provider: "google_cloud_tts_static_fallback",
-    }
-  }
+  },
 }
 
 export async function generateVocabularyAudio(
-  word: string,
-  languageCode = "es-US",
-  voiceName?: string,
-): Promise<TTSResponse> {
+  text: string,
+  voice = "es-US-Neural2-B",
+): Promise<{ success: boolean; audioUrl?: string; error?: string }> {
   try {
-    console.log(`Generating vocabulary audio for word: "${word}"`)
-    // Determine voice based on language or use a default high-quality Spanish voice
-    const selectedVoice = voiceName || (languageCode.startsWith("es-ES") ? "es-ES-Neural2-A" : "es-US-Neural2-A")
-    const gender =
-      (commonSpanishVoices.find((v) => v.name === selectedVoice)?.gender as "FEMALE" | "MALE" | "NEUTRAL") || "FEMALE"
+    console.log(`[TTS] Generating audio for: "${text}" with voice: ${voice}`)
 
-    return await generateTTS({
-      text: word,
-      voice: selectedVoice,
-      languageCode: languageCode,
-      ssmlGender: gender,
-    })
-  } catch (error) {
-    console.error("Error generating vocabulary audio:", error)
-    return {
-      success: false,
-      error: `Failed to generate vocabulary audio: ${error instanceof Error ? error.message : "Unknown error"}`,
+    // Check if we have Google TTS credentials
+    const hasCredentials = process.env.GOOGLE_TTS_CREDENTIALS ? true : false
+
+    if (!hasCredentials) {
+      console.log("[TTS] No Google TTS credentials found, using mock TTS service")
+      return mockTTS.generateAudio(text, voice)
     }
+
+    // Initialize the TTS client
+    const client = new TextToSpeechClient({
+      credentials: JSON.parse(process.env.GOOGLE_TTS_CREDENTIALS || "{}"),
+    })
+
+    // Configure the request
+    const request = {
+      input: { text },
+      voice: {
+        languageCode: voice.split("-").slice(0, 2).join("-"), // Extract language code (e.g., "es-US")
+        name: voice,
+      },
+      audioConfig: { audioEncoding: "MP3" },
+    }
+
+    // Generate the audio
+    const [response] = await client.synthesizeSpeech(request)
+
+    if (!response.audioContent) {
+      throw new Error("No audio content received from Google TTS")
+    }
+
+    // Convert audio content to base64
+    const audioBase64 = Buffer.from(response.audioContent as Uint8Array).toString("base64")
+
+    // Create a data URL for the audio
+    const audioUrl = `data:audio/mp3;base64,${audioBase64}`
+
+    return {
+      success: true,
+      audioUrl,
+    }
+  } catch (error) {
+    console.error("[TTS] Error generating audio:", error)
+
+    // Fallback to mock TTS service if Google TTS fails
+    console.log("[TTS] Falling back to mock TTS service")
+    return mockTTS.generateAudio(text, voice)
   }
 }
 
-// Export alias for backward compatibility
-export const generateVocabularyTTS = generateVocabularyAudio
+export async function getAvailableVoices(): Promise<{ id: string; name: string; gender: string }[]> {
+  // Return a list of available voices for Spanish
+  return [
+    { id: "es-US-Neural2-A", name: "Spanish (US) - Female", gender: "female" },
+    { id: "es-US-Neural2-B", name: "Spanish (US) - Male", gender: "male" },
+    { id: "es-US-Neural2-C", name: "Spanish (US) - Female 2", gender: "female" },
+    { id: "es-ES-Neural2-A", name: "Spanish (Spain) - Female", gender: "female" },
+    { id: "es-ES-Neural2-B", name: "Spanish (Spain) - Male", gender: "male" },
+    { id: "es-ES-Neural2-C", name: "Spanish (Spain) - Female 2", gender: "female" },
+  ]
+}

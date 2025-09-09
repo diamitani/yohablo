@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Flashcard } from "@/components/flashcard"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -25,7 +25,14 @@ export function FlashcardSystem({ lessonTitle, flashcards }: FlashcardSystemProp
   const [correctCount, setCorrectCount] = useState(0)
   const [incorrectCount, setIncorrectCount] = useState(0)
   const [reviewedCards, setReviewedCards] = useState<Set<number>>(new Set())
-  const [shuffledCards, setShuffledCards] = useState(flashcards)
+  const [shuffledCards, setShuffledCards] = useState<FlashcardItem[]>([])
+
+  // Initialize shuffled cards on component mount
+  useEffect(() => {
+    if (flashcards && flashcards.length > 0) {
+      setShuffledCards([...flashcards])
+    }
+  }, [flashcards])
 
   const currentCard = shuffledCards[currentIndex]
   const totalReviewed = reviewedCards.size
@@ -70,10 +77,10 @@ export function FlashcardSystem({ lessonTitle, flashcards }: FlashcardSystemProp
     setCorrectCount(0)
     setIncorrectCount(0)
     setReviewedCards(new Set())
-    setShuffledCards(flashcards)
+    setShuffledCards([...flashcards])
   }
 
-  if (!flashcards || flashcards.length === 0) {
+  if (!flashcards || flashcards.length === 0 || !currentCard) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Volume2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -26,6 +27,11 @@ export function VocabularyAudio({ word, audioSrc }: VocabularyAudioProps) {
     providedAudioSrc: audioSrc,
   })
 
+  // For development, log the word and audio source
+  useEffect(() => {
+    console.log(`VocabularyAudio component mounted for word: ${word}`, { audioSrc })
+  }, [word, audioSrc])
+
   return (
     <ErrorBoundary FallbackComponent={AudioFallback}>
       <TooltipProvider>
@@ -35,7 +41,10 @@ export function VocabularyAudio({ word, audioSrc }: VocabularyAudioProps) {
               variant="ghost"
               size="icon"
               className="h-6 w-6 rounded-full"
-              onClick={play}
+              onClick={() => {
+                console.log(`Playing audio for: ${word}`)
+                play()
+              }}
               disabled={isLoading}
               aria-label={`Hear pronunciation for ${word}`}
             >
