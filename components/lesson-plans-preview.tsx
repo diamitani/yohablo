@@ -1,91 +1,70 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Play, Clock, Users, Star, Download } from "lucide-react"
+import { Clock, Users, Star, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
 const featuredLessons = [
   {
-    id: "colors-colores",
-    title: "Colors (Colores)",
-    description: "Learn Spanish color vocabulary through catchy hip-hop beats and memorable lyrics.",
+    id: "colors",
+    title: "Spanish Colors (Colores)",
+    description:
+      "Learn colors through hip-hop beats with 'Verde' for green, 'Rojo' for red, and more vibrant vocabulary.",
     image: "/spanish-colors-rainbow-lesson.png",
-    duration: "30 min",
+    duration: "25 min",
+    level: "Beginner",
     students: "2.3k",
     rating: 4.9,
-    level: "Beginner",
     category: "Vocabulary",
-    highlights: [
-      "11 essential color words",
-      "Cultural context and usage",
-      "Interactive pronunciation guide",
-      "Printable worksheet included",
-    ],
-    songPreview: "Verde my money is green, Negro - black is what they call me...",
-    worksheetUrl: "/worksheets/Colors-Colores-Worksheet.pdf",
+    highlights: ["Interactive worksheets", "Hip-hop audio", "Color recognition games"],
+    slug: "colors-colores",
   },
   {
-    id: "numbers-numeros",
+    id: "numbers",
     title: "Numbers 0-100 (Números)",
-    description: "Master Spanish numbers from zero to one hundred with rhythm and flow.",
+    description: "Master Spanish numbers with the viral '0 to 100' hip-hop track that students can't stop singing.",
     image: "/spanish-numbers-lesson.png",
-    duration: "45 min",
-    students: "1.8k",
-    rating: 4.8,
+    duration: "30 min",
     level: "Beginner",
-    category: "Fundamentals",
-    highlights: [
-      "Count 0-100 in Spanish",
-      "Number patterns and formation",
-      "Practical usage examples",
-      "Fill-in-the-blank worksheet",
-    ],
-    songPreview: "Cero, that's zero or nothing, Número uno in Spanish, no bluffin'...",
-    worksheetUrl: "/worksheets/Numbers-0-to-101-Worksheet.pdf",
+    students: "3.1k",
+    rating: 4.8,
+    category: "Numbers",
+    highlights: ["Counting songs", "Fill-in worksheets", "Number games"],
+    slug: "numbers-0-to-100",
   },
   {
-    id: "neighborhood-places",
+    id: "neighborhood",
     title: "Neighborhood Places (El Barrio)",
-    description: "Explore places in your neighborhood while learning essential Spanish vocabulary.",
+    description:
+      "Explore your neighborhood in Spanish with 'The Corner' - learn places like 'la escuela', 'el parque', and more.",
     image: "/spanish-city-neighborhood-lesson.png",
     duration: "35 min",
-    students: "1.5k",
+    level: "Intermediate",
+    students: "1.8k",
     rating: 4.7,
-    level: "Beginner",
-    category: "Vocabulary",
-    highlights: [
-      "Essential location vocabulary",
-      "Giving and asking directions",
-      "Cultural neighborhood context",
-      "Interactive practice activities",
-    ],
-    songPreview: "The corner, teaching places students can see around my corner...",
-    worksheetUrl: "/worksheets/Neighborhood-The-Corner-Worksheet.pdf",
+    category: "Places",
+    highlights: ["Location vocabulary", "Interactive maps", "Real-world practice"],
+    slug: "neighborhood-places",
   },
 ]
 
 export function LessonPlansPreview() {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-16 lg:py-24 bg-white dark:bg-gray-950">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">
-            🎵 Featured Lessons
-          </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Engaging Spanish Lessons Through Hip-Hop
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover our most popular lessons that combine authentic hip-hop music with comprehensive Spanish learning
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Spanish Lessons</h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Hip-hop powered lessons that make Spanish vocabulary stick in students' minds
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredLessons.map((lesson) => (
-            <Card key={lesson.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+            <Card key={lesson.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
               <div className="relative">
                 <Image
                   src={lesson.image || "/placeholder.svg"}
@@ -94,78 +73,55 @@ export function LessonPlansPreview() {
                   height={240}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300" />
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-white/90 text-gray-900">{lesson.category}</Badge>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <Badge variant="secondary" className="bg-white/90 text-gray-900">
-                    {lesson.level}
+                  <Badge variant="secondary" className="bg-white/90 text-black">
+                    {lesson.category}
                   </Badge>
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Button size="lg" className="bg-white/90 text-gray-900 hover:bg-white">
-                    <Play className="mr-2 h-5 w-5" />
-                    Start Lesson
-                  </Button>
+                <div className="absolute top-4 right-4">
+                  <div className="bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">{lesson.level}</div>
                 </div>
               </div>
 
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">{lesson.title}</CardTitle>
-                    <CardDescription className="text-gray-600">{lesson.description}</CardDescription>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-gray-500 mt-4">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {lesson.duration}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {lesson.students}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    {lesson.rating}
-                  </div>
-                </div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg line-clamp-2">{lesson.title}</CardTitle>
+                <p className="text-sm text-muted-foreground line-clamp-2">{lesson.description}</p>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">What You'll Learn:</h4>
-                  <ul className="space-y-1">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-1">
+                    <Clock className="h-4 w-4" />
+                    <span>{lesson.duration}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="h-4 w-4" />
+                    <span>{lesson.students}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span>{lesson.rating}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">What you'll learn:</h4>
+                  <ul className="text-xs text-muted-foreground space-y-1">
                     {lesson.highlights.map((highlight, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                        {highlight}
+                      <li key={index} className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                        <span>{highlight}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-1 text-sm">Song Preview:</h4>
-                  <p className="text-sm text-gray-600 italic">"{lesson.songPreview}"</p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button asChild className="flex-1">
-                    <Link href={`/lessons/${lesson.id}`}>
-                      <Play className="mr-2 h-4 w-4" />
-                      Start Lesson
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="icon" asChild>
-                    <Link href={lesson.worksheetUrl}>
-                      <Download className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+                <Button asChild className="w-full">
+                  <Link href={`/lessons/${lesson.slug}`}>
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Lesson
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ))}

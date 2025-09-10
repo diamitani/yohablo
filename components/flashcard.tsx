@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, X, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { VocabularyAudio } from "@/components/vocabulary-audio"
 
 interface FlashcardProps {
   frontText: string
@@ -39,97 +38,65 @@ export function Flashcard({ frontText, backText, onCorrect, onIncorrect, classNa
   return (
     <div className={cn("w-full h-full min-h-[300px]", className)}>
       <Card
-        className={cn(
-          "relative w-full h-full cursor-pointer transition-all duration-500 transform-gpu",
-          isFlipped ? "rotate-y-180" : "",
-        )}
+        className="relative w-full h-full cursor-pointer transition-all duration-300 hover:shadow-lg"
         onClick={handleFlip}
       >
-        <div
-          className={cn(
-            "absolute inset-0 flex flex-col items-center justify-center p-6 text-center backface-hidden",
-            isFlipped ? "opacity-0" : "opacity-100",
-          )}
-        >
-          {/* Front of card - Spanish word */}
-          <div className="space-y-4">
-            <div className="text-3xl font-bold text-primary">{frontText}</div>
-            <div className="flex items-center justify-center">
-              <VocabularyAudio word={frontText} />
-              <div className="text-sm text-muted-foreground ml-2">Click to hear pronunciation</div>
-            </div>
-            <div className="text-sm text-muted-foreground mt-4">Click card to see pronunciation guide</div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleReset()
-              }}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            "absolute inset-0 flex flex-col items-center justify-center p-6 text-center backface-hidden rotate-y-180",
-            isFlipped ? "opacity-100" : "opacity-0",
-          )}
-        >
-          {/* Back of card - Pronunciation */}
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="text-lg text-muted-foreground">Pronunciation:</div>
-              <div className="text-2xl font-semibold">{backText}</div>
-            </div>
-
-            <div className="text-sm text-muted-foreground mb-4">How well did you know this?</div>
-
-            <div className="flex space-x-3">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+          {!isFlipped ? (
+            // Front of card - Spanish word
+            <div className="space-y-4">
+              <div className="text-3xl font-bold text-primary">{frontText}</div>
+              <div className="text-sm text-muted-foreground">Click to see pronunciation</div>
               <Button
-                variant="outline"
-                className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4"
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleIncorrect()
+                  handleReset()
                 }}
               >
-                <X className="mr-2 h-4 w-4" />
-                Didn't Know
-              </Button>
-              <Button
-                variant="outline"
-                className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleCorrect()
-                }}
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Knew It
+                <RotateCcw className="h-4 w-4" />
               </Button>
             </div>
-          </div>
+          ) : (
+            // Back of card - Pronunciation
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="text-lg text-muted-foreground">Pronunciation:</div>
+                <div className="text-2xl font-semibold">{backText}</div>
+              </div>
+
+              <div className="text-sm text-muted-foreground mb-4">How well did you know this?</div>
+
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleIncorrect()
+                  }}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Didn't Know
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleCorrect()
+                  }}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Knew It
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
-
-      {/* CSS for 3D card flip effect */}
-      <style jsx global>{`
-        .rotate-y-180 {
-          transform: rotateY(180deg);
-        }
-        
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-        
-        .transform-gpu {
-          transform-style: preserve-3d;
-        }
-      `}</style>
     </div>
   )
 }

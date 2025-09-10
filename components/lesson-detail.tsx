@@ -1,181 +1,189 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Play, Clock, Star, Volume2, BookOpen, Music } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { AudioPlayer } from "@/components/audio-player"
 import { VocabularyAudio } from "@/components/vocabulary-audio"
-import { FlashcardSystem } from "@/components/flashcard-system"
-import Image from "next/image"
+import { Play, BookOpen, Volume2, Clock, Target, CheckCircle, Star, Heart } from "lucide-react"
+import Link from "next/link"
+import type { Lesson } from "@/lib/types"
 
 interface LessonDetailProps {
-  lesson: {
-    id: string
-    title: string
-    description: string
-    content: string
-    image: string
-    category: string
-    level: string
-    duration: string
-    vocabulary: Array<{
-      word: string
-      translation: string
-      pronunciation: string
-    }>
-  }
+  lesson: Lesson
 }
 
 export function LessonDetail({ lesson }: LessonDetailProps) {
-  const [activeTab, setActiveTab] = useState("overview")
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [completedPoints, setCompletedPoints] = useState<number[]>([])
 
-  // Convert vocabulary to flashcard format
-  const flashcards = lesson.vocabulary.map((item, index) => ({
-    id: `${lesson.id}-${index}`,
-    word: item.word,
-    pronunciation: item.pronunciation,
-    category: lesson.category,
-  }))
+  const toggleLearningPoint = (index: number) => {
+    setCompletedPoints((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
+  }
+
+  const getDifficultyColor = (difficulty?: string) => {
+    switch (difficulty) {
+      case "beginner":
+        return "bg-green-100 text-green-800"
+      case "intermediate":
+        return "bg-yellow-100 text-yellow-800"
+      case "advanced":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const progressPercentage = lesson.learningPoints
+    ? (completedPoints.length / lesson.learningPoints.length) * 100
+    : lesson.progress || 0
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Lesson Header */}
-      <Card className="overflow-hidden">
-        <div className="grid md:grid-cols-2 gap-0">
-          <div className="relative h-64 md:h-auto">
-            <Image src={lesson.image || "/placeholder.svg"} alt={lesson.title} fill className="object-cover" />
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Button size="lg" className="bg-white/90 text-gray-900 hover:bg-white">
-                <Play className="mr-2 h-5 w-5" />
-                Play Lesson
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className={getDifficultyColor(lesson.difficulty)}>{lesson.difficulty || "Beginner"}</Badge>
+              <Badge variant="outline">
+                <Clock className="h-3 w-3 mr-1" />
+                {lesson.duration || "10 min"}
+              </Badge>
+              <Badge variant="outline">{lesson.category}</Badge>
+            </div>
+
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{lesson.title}</h1>
+            <p className="text-gray-600 leading-relaxed">{lesson.description}</p>
+
+            {/* Progress */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress</span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Play className="h-4 w-4 mr-2" />
+                Start Lesson
+              </Button>
+              <Button variant="outline">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Practice
+              </Button>
+              <Button variant="ghost" onClick={() => setIsFavorited(!isFavorited)}>
+                <Heart className={`h-4 w-4 mr-2 ${isFavorited ? "fill-red-500 text-red-500" : ""}`} />
+                {isFavorited ? "Favorited" : "Favorite"}
               </Button>
             </div>
           </div>
-
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="secondary">{lesson.category}</Badge>
-              <Badge variant="outline">{lesson.level}</Badge>
-            </div>
-
-            <CardTitle className="text-2xl mb-4">{lesson.title}</CardTitle>
-            <CardDescription className="text-base mb-6">{lesson.description}</CardDescription>
-
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {lesson.duration}
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                {lesson.vocabulary.length} words
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                4.8
-              </div>
-            </div>
-          </CardHeader>
-        </div>
+        </CardContent>
       </Card>
 
-      {/* Lesson Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="vocabulary">Vocabulary</TabsTrigger>
-          <TabsTrigger value="song">Song</TabsTrigger>
-          <TabsTrigger value="practice">Practice</TabsTrigger>
-        </TabsList>
+      {/* Audio Section */}
+      {lesson.audioUrl && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Volume2 className="h-5 w-5 text-green-600" />
+              Lesson Audio
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AudioPlayer src={lesson.audioUrl} title={lesson.title} />
+          </CardContent>
+        </Card>
+      )}
 
-        <TabsContent value="overview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Lesson Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: lesson.content.replace(/\n/g, "<br>") }} />
+      {/* Learning Objectives & Vocabulary */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Learning Points */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              Learning Objectives
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {lesson.learningPoints?.map((point, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer"
+                onClick={() => toggleLearningPoint(index)}
+              >
+                <CheckCircle
+                  className={`h-4 w-4 mt-0.5 ${completedPoints.includes(index) ? "text-green-600" : "text-gray-400"}`}
+                />
+                <span className={`text-sm ${completedPoints.includes(index) ? "line-through text-gray-500" : ""}`}>
+                  {point}
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )) || <p className="text-gray-500 text-sm">No objectives specified.</p>}
+          </CardContent>
+        </Card>
 
-        <TabsContent value="vocabulary" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Volume2 className="w-5 h-5" />
-                Vocabulary ({lesson.vocabulary.length} words)
-              </CardTitle>
-              <CardDescription>Click the audio button to hear the pronunciation of each word</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {lesson.vocabulary.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <VocabularyAudio word={item.word} />
-                      <div>
-                        <div className="font-semibold text-lg text-gray-900">{item.word}</div>
-                        <div className="text-sm text-gray-600">{item.pronunciation}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium text-gray-900">{item.translation}</div>
+        {/* Vocabulary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-purple-600" />
+              Vocabulary ({lesson.vocabularyWords?.length || 0})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {lesson.vocabularyWords?.slice(0, 6).map((word, index) => {
+              const [spanish, english] = word.includes(" - ") ? word.split(" - ") : [word, ""]
+              return (
+                <div key={index} className="flex items-center justify-between p-2 border rounded">
+                  <div className="flex items-center gap-2">
+                    <VocabularyAudio word={spanish} size="sm" />
+                    <div>
+                      <div className="font-medium">{spanish}</div>
+                      {english && <div className="text-xs text-gray-500">{english}</div>}
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="song" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Music className="w-5 h-5" />
-                Song Lyrics
-              </CardTitle>
-              <CardDescription>Spanish words are highlighted in the lyrics below</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <div className="prose max-w-none">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: lesson.content
-                        .replace(/\n/g, "<br>")
-                        .replace(
-                          /(Verde|Negro|Azul|Blanco|Morado|Anaranjado|Rojo|Marrón|Amarillo|Gris|Rosado|Colores)/g,
-                          '<span class="bg-yellow-200 px-1 rounded font-semibold">$1</span>',
-                        )
-                        .replace(
-                          /(Cero|Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez)/g,
-                          '<span class="bg-blue-200 px-1 rounded font-semibold">$1</span>',
-                        ),
-                    }}
-                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              )
+            }) || <p className="text-gray-500 text-sm">No vocabulary available.</p>}
 
-        <TabsContent value="practice" className="space-y-6">
-          <FlashcardSystem lessonTitle={lesson.title} flashcards={flashcards} />
-        </TabsContent>
-      </Tabs>
+            {(lesson.vocabularyWords?.length || 0) > 6 && (
+              <Button variant="outline" size="sm" className="w-full mt-2 bg-transparent">
+                View All {lesson.vocabularyWords?.length} Words
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Practice Options */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Practice Activities</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Link href={`/pronunciation-practice/${lesson.slug}`}>
+              <Button variant="outline" className="w-full bg-transparent">
+                <Volume2 className="h-4 w-4 mr-2" />
+                Pronunciation Practice
+              </Button>
+            </Link>
+            <Link href={`/flashcards/${lesson.slug}`}>
+              <Button variant="outline" className="w-full bg-transparent">
+                <Star className="h-4 w-4 mr-2" />
+                Flashcards
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

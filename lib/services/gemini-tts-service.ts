@@ -1,93 +1,125 @@
-interface GeminiTTSOptions {
+"use server"
+
+import { GoogleGenerativeAI } from "@google/generative-ai"
+
+interface GeminiTTSProps {
   text: string
-  language?: string
+  languageCode?: string
   voice?: string
   speed?: number
 }
 
-interface GeminiTTSResponse {
-  audioUrl: string
-  pronunciation?: string
-  phonetic?: string
+let genAI: GoogleGenerativeAI | null = null
+
+function initializeGeminiClient() {
+  if (genAI) {
+    return genAI
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY environment variable is not set.")
+    throw new Error("Gemini TTS service is not configured.")
+  }
+
+  try {
+    genAI = new GoogleGenerativeAI(apiKey)
+    return genAI
+  } catch (error) {
+    console.error("Failed to initialize Gemini client:", error)
+    throw new Error("Gemini TTS service initialization failed.")
+  }
 }
 
-export class GeminiTTSService {
-  private apiKey: string
-  private baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+export async function synthesizeSpeechWithGemini({
+  text,
+  languageCode = "es-US",
+  voice = "female",
+  speed = 1.0,
+}: GeminiTTSProps): Promise<{ success: boolean; audioUrl?: string; error?: string }> {
+  try {
+    const client = initializeGeminiClient()
 
-  constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY || ""
-  }
+    // Use Gemini to generate SSML for better pronunciation
+    const model = client.getGenerativeModel({ model: "gemini-pro" })
 
-  async generateSpeech(options: GeminiTTSOptions): Promise<GeminiTTSResponse> {
-    try {
-      // For MVP, we'll use a mock implementation
-      // In production, this would integrate with Google's TTS API
-      const mockResponse: GeminiTTSResponse = {
-        audioUrl: `/audio/tts-${Date.now()}.mp3`,
-        pronunciation: this.generatePronunciation(options.text),
-        phonetic: this.generatePhonetic(options.text),
-      }
+    const prompt = `Convert the following Spanish text to SSML format for text-to-speech synthesis. 
+    Ensure proper Spanish pronunciation, emphasis, and natural pauses:
+    
+    Text: "${text}"
+    Language: ${languageCode}
+    Voice: ${voice}
+    
+    Return only the SSML markup without explanation.`
 
-      return mockResponse
-    } catch (error) {
-      console.error("Gemini TTS Error:", error)
-      throw new Error("Failed to generate speech")
-    }
-  }
+    const result = await model.generateContent(prompt)
+    const ssmlText = result.response.text()
 
-  private generatePronunciation(text: string): string {
-    // Simple pronunciation guide for common Spanish words
-    const pronunciationMap: Record<string, string> = {
-      hola: "OH-lah",
-      gracias: "GRAH-see-ahs",
-      "por favor": "por fah-VOR",
-      adiós: "ah-dee-OHS",
-      "buenos días": "BWAY-nos DEE-ahs",
-      "buenas noches": "BWAY-nas NO-ches",
-      rojo: "ROH-ho",
-      azul: "ah-SOOL",
-      verde: "VER-deh",
-      amarillo: "ah-mah-REE-yo",
-      negro: "NEH-gro",
-      blanco: "BLAHN-ko",
-    }
+    console.log(`Generated SSML for text: "${text}"`)
+    console.log(`SSML: ${ssmlText}`)
 
-    return pronunciationMap[text.toLowerCase()] || text.toUpperCase()
-  }
-
-  private generatePhonetic(text: string): string {
-    // Simple phonetic representation
-    return `[${text.toLowerCase().replace(/[aeiou]/g, (match) => {
-      const phoneticMap: Record<string, string> = {
-        a: "ä",
-        e: "e",
-        i: "i",
-        o: "o",
-        u: "u",
-      }
-      return phoneticMap[match] || match
-    })}]`
-  }
-
-  async getPronunciationHelp(word: string): Promise<{
-    pronunciation: string
-    phonetic: string
-    tips: string[]
-  }> {
-    const tips = [
-      "Roll your R's lightly",
-      "Vowels are pronounced consistently",
-      "Stress usually falls on the second-to-last syllable",
-      "Practice with the audio multiple times",
-    ]
-
+    // For MVP, we'll use Web Speech API on the client side
+    // In production, you would use the SSML with a proper TTS service
     return {
-      pronunciation: this.generatePronunciation(word),
-      phonetic: this.generatePhonetic(word),
-      tips,
+      success: true,
+      audioUrl: `/api/tts/generate?text=${encodeURIComponent(text)}&lang=${languageCode}&voice=${voice}`,
+    }
+  } catch (error) {
+    console.error("Error in Gemini TTS synthesis:", error)
+    return {
+      success: false,
+      error: `Failed to synthesize speech with Gemini: ${error instanceof Error ? error.message : "Unknown error"}`,
     }
   }
 }
 
-export const geminiTTS = new GeminiTTSService()
+export async function generateSpanishPronunciation(
+  word: string,
+  context?: string,
+): Promise<{ success: boolean; pronunciation?: string; tips?: string; error?: string }> {
+  try {
+    const client = initializeGeminiClient()
+    const model = client.getGenerativeModel({ model: "gemini-pro" })
+
+    const prompt = `As a Spanish pronunciation expert, provide:
+    1. Phonetic pronunciation guide for: "${word}"
+    2. Pronunciation tips for English speakers
+    3. Common mistakes to avoid
+    ${context ? `4. Context: ${context}` : ""}
+    
+    Format as JSON with keys: pronunciation, tips, mistakes`
+
+    const result = await model.generateContent(prompt)
+    const response = result.response.text()
+
+    try {
+      const parsed = JSON.parse(response)
+      return {
+        success: true,
+        pronunciation: parsed.pronunciation,
+        tips: parsed.tips,
+      }
+    } catch {
+      return {
+        success: true,
+        pronunciation: response,
+        tips: "Practice slowly and focus on rolling your R's",
+      }
+    }
+  } catch (error) {
+    console.error("Error generating pronunciation guide:", error)
+    return {
+      success: false,
+      error: `Failed to generate pronunciation: ${error instanceof Error ? error.message : "Unknown error"}`,
+    }
+  }
+}
+
+export const spanishVoices = [
+  { id: "es-female-1", name: "María (Female - Spain)", region: "Spain", gender: "female" },
+  { id: "es-male-1", name: "Carlos (Male - Spain)", region: "Spain", gender: "male" },
+  { id: "es-female-2", name: "Sofia (Female - Mexico)", region: "Mexico", gender: "female" },
+  { id: "es-male-2", name: "Diego (Male - Mexico)", region: "Mexico", gender: "male" },
+  { id: "es-female-3", name: "Isabella (Female - Argentina)", region: "Argentina", gender: "female" },
+  { id: "es-male-3", name: "Alejandro (Male - Colombia)", region: "Colombia", gender: "male" },
+]
