@@ -211,13 +211,7 @@ export function SongGenerator() {
             )}
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleReset}
-                disabled={isPending}
-                className="flex-1 bg-transparent"
-              >
+              <Button type="button" variant="outline" onClick={handleReset} disabled={isPending} className="flex-1">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Reset
               </Button>

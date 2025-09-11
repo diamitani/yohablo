@@ -1,167 +1,248 @@
-import { PageHeader } from "@/components/page-header"
+"use client"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Video, Clock, Play } from "lucide-react"
+import { Play, Clock, Users, BookOpen, ExternalLink } from "lucide-react"
+import { YoutubePlayer } from "@/components/youtube-player"
 import Link from "next/link"
 
+const videoLessons = [
+  {
+    id: "1",
+    title: "Juli Slide (Spanish Alphabet)",
+    description: "Learn the Spanish alphabet through hip hop music with proper pronunciation and letter recognition.",
+    videoUrl: "https://youtu.be/uOQMDaWSn6c",
+    videoId: "uOQMDaWSn6c",
+    duration: "15 min",
+    difficulty: "Beginner",
+    category: "Fundamentals",
+    imageUrl: "/spanish-alphabet-lesson.png",
+    lessonSlug: "alfabeto",
+    stats: {
+      vocabulary: 29,
+      exercises: 15,
+      worksheets: 1,
+    },
+  },
+  {
+    id: "2",
+    title: "Colores (Colors in Spanish)",
+    description: "Master Spanish color vocabulary through engaging hip hop beats and memorable lyrics.",
+    videoUrl: "https://www.youtube.com/watch?v=l0W4vdQKYbI",
+    videoId: "l0W4vdQKYbI",
+    duration: "12 min",
+    difficulty: "Beginner",
+    category: "Vocabulary",
+    imageUrl: "/spanish-colors-rainbow-lesson.png",
+    lessonSlug: "colores",
+    stats: {
+      vocabulary: 11,
+      exercises: 12,
+      worksheets: 1,
+    },
+  },
+  {
+    id: "3",
+    title: "Numbers (0 to 101)",
+    description: "Count and learn numbers in Spanish with rhythm and rhyme that makes learning fun and memorable.",
+    videoUrl: "https://youtu.be/iVkolTR98ew",
+    videoId: "iVkolTR98ew",
+    duration: "18 min",
+    difficulty: "Beginner",
+    category: "Numbers",
+    imageUrl: "/spanish-numbers-lesson.png",
+    lessonSlug: "numeros",
+    stats: {
+      vocabulary: 21,
+      exercises: 20,
+      worksheets: 1,
+    },
+  },
+  {
+    id: "4",
+    title: "Cuerpo (Body Parts)",
+    description: "Learn Spanish vocabulary for body parts through engaging hip hop music and visual associations.",
+    videoUrl: "https://youtu.be/0KbRb6Qt34s",
+    videoId: "0KbRb6Qt34s",
+    duration: "14 min",
+    difficulty: "Beginner",
+    category: "Vocabulary",
+    imageUrl: "/spanish-body-parts.png",
+    lessonSlug: "cuerpo",
+    stats: {
+      vocabulary: 14,
+      exercises: 10,
+      worksheets: 1,
+    },
+  },
+]
+
 export default function VideosPage() {
-  // Only the video lessons with actual working video URLs
-  const videoLessons = [
-    {
-      id: "1",
-      slug: "alfabeto",
-      title: "Juli Slide (Alphabet in Spanish)",
-      description: "Learn the Spanish alphabet through hip hop music with this catchy educational song.",
-      videoUrl: "https://www.youtube.com/embed/uOQMDaWSn6c",
-      thumbnail: "/spanish-alphabet-lesson.png",
-      category: "Fundamentals",
-      duration: "3:45",
-      vocabularyCount: 26,
-    },
-    {
-      id: "2",
-      slug: "colores",
-      title: "Colores (Colors in Spanish)",
-      description: "Master Spanish color vocabulary through engaging hip hop beats and memorable lyrics.",
-      videoUrl: "https://www.youtube.com/embed/l0W4vdQKYbI",
-      thumbnail: "/spanish-colors-rainbow-lesson.png",
-      category: "Vocabulary",
-      duration: "4:12",
-      vocabularyCount: 11,
-    },
-    {
-      id: "3",
-      slug: "numeros",
-      title: "Numbers in Spanish",
-      description: "Count and learn numbers in Spanish with rhythm and rhyme that makes learning fun.",
-      videoUrl: "https://www.youtube.com/embed/iVkolTR98ew",
-      thumbnail: "/spanish-numbers-lesson.png",
-      category: "Fundamentals",
-      duration: "5:23",
-      vocabularyCount: 15,
-    },
-  ]
+  const totalDuration = videoLessons.reduce((sum, lesson) => {
+    const minutes = Number.parseInt(lesson.duration.split(" ")[0])
+    return sum + minutes
+  }, 0)
+
+  const totalVocabulary = videoLessons.reduce((sum, lesson) => sum + lesson.stats.vocabulary, 0)
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        title="Video Lessons"
-        description="Learn Spanish through engaging hip hop music videos that make vocabulary and grammar memorable."
-      />
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
       <div className="container px-4 md:px-6 py-12">
-        {/* Stats Section */}
-        <div className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Video className="h-8 w-8 text-primary" />
-              </div>
-              <div className="text-2xl font-bold">{videoLessons.length}</div>
-              <div className="text-sm text-muted-foreground">Video Lessons</div>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Clock className="h-8 w-8 text-primary" />
-              </div>
-              <div className="text-2xl font-bold">13+</div>
-              <div className="text-sm text-muted-foreground">Minutes of Content</div>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Play className="h-8 w-8 text-primary" />
-              </div>
-              <div className="text-2xl font-bold">52+</div>
-              <div className="text-sm text-muted-foreground">Vocabulary Words</div>
-            </Card>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            Spanish Video Lessons
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
+            Learn Spanish through engaging hip-hop music videos. Each lesson combines catchy beats with essential
+            vocabulary and grammar concepts.
+          </p>
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm">
+              <Play className="h-5 w-5 text-red-600" />
+              <span className="font-semibold">{videoLessons.length} Videos</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm">
+              <Clock className="h-5 w-5 text-blue-600" />
+              <span className="font-semibold">{totalDuration} Minutes</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm">
+              <BookOpen className="h-5 w-5 text-green-600" />
+              <span className="font-semibold">{totalVocabulary} Vocabulary Words</span>
+            </div>
           </div>
         </div>
 
-        {/* Video Lessons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {videoLessons.map((lesson) => (
-            <Card
-              key={lesson.id}
-              className="overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="aspect-video relative">
-                <iframe
-                  src={lesson.videoUrl}
-                  title={lesson.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                ></iframe>
-
-                {/* Overlay with lesson info */}
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge variant="secondary" className="bg-black/70 text-white border-0">
-                    <Video className="h-3 w-3 mr-1" />
-                    Video
-                  </Badge>
-                  <Badge variant="secondary" className="bg-black/70 text-white border-0">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {lesson.duration}
-                  </Badge>
+        {/* Featured Video */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Featured Video</h2>
+          <Card className="max-w-4xl mx-auto overflow-hidden shadow-xl">
+            <div className="aspect-video">
+              <YoutubePlayer videoId={videoLessons[0].videoId} title={videoLessons[0].title} />
+            </div>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">{videoLessons[0].title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">{videoLessons[0].description}</p>
                 </div>
-
-                <div className="absolute top-3 right-3">
-                  <Badge variant="outline" className="bg-white/90 text-gray-900 border-0">
-                    {lesson.category}
-                  </Badge>
-                </div>
+                <Badge className="bg-blue-600 text-white">{videoLessons[0].category}</Badge>
               </div>
 
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                      {lesson.title}
-                    </h3>
-                    <p className="text-muted-foreground text-sm line-clamp-2">{lesson.description}</p>
-                  </div>
+              <div className="flex items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {videoLessons[0].duration}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {videoLessons[0].difficulty}
+                </span>
+                <span className="flex items-center gap-1">
+                  <BookOpen className="h-4 w-4" />
+                  {videoLessons[0].stats.vocabulary} words
+                </span>
+              </div>
 
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <span>{lesson.vocabularyCount} words</span>
-                      <span>{lesson.duration}</span>
-                    </div>
-                    <Badge variant="secondary">{lesson.category}</Badge>
-                  </div>
-
-                  <Link href={`/lessons/${lesson.slug}`} className="block">
-                    <Button className="w-full group-hover:shadow-md transition-all duration-300">
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch Lesson
-                    </Button>
+              <div className="flex gap-3">
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <Link href={`/lessons/${videoLessons[0].lessonSlug}`}>
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    View Full Lesson
                   </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href={`/worksheets/${videoLessons[0].lessonSlug}`}>Practice Worksheet</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* All Videos Grid */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">All Video Lessons</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+            {videoLessons.map((lesson) => (
+              <Card key={lesson.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="aspect-video relative">
+                  <YoutubePlayer videoId={lesson.videoId} title={lesson.title} />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">{lesson.category}</Badge>
+                    <Badge variant="outline">{lesson.difficulty}</Badge>
+                  </div>
+                  <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">{lesson.title}</CardTitle>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{lesson.description}</p>
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {lesson.duration}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="h-4 w-4" />
+                      {lesson.stats.vocabulary} words
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      asChild
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    >
+                      <Link href={`/lessons/${lesson.lessonSlug}`}>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Full Lesson
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={lesson.videoUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Call to Action */}
-        <div className="mt-16 text-center">
-          <Card className="p-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-            <h3 className="text-2xl font-bold mb-4">Ready to Learn More?</h3>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Explore our complete collection of Spanish lessons including audio content, interactive worksheets, and
-              flashcards.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/lessons">
-                <Button size="lg" className="gap-2">
-                  Browse All Lessons
+        <div className="text-center">
+          <Card className="max-w-2xl mx-auto bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold mb-4">Ready to Practice?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Test your knowledge with interactive worksheets based on these video lessons.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <Link href="/worksheets">
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Practice Worksheets
+                  </Link>
                 </Button>
-              </Link>
-              <Link href="/flashcards">
-                <Button size="lg" variant="outline" className="gap-2">
-                  Try Flashcards
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/lessons">View All Lessons</Link>
                 </Button>
-              </Link>
-            </div>
+              </div>
+            </CardContent>
           </Card>
         </div>
       </div>

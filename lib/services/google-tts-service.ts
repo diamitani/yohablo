@@ -1,5 +1,7 @@
 "use server"
 
+import { TextToSpeechClient } from "@google-cloud/text-to-speech"
+
 interface SynthesizeSpeechProps {
   text: string
   languageCode?: string
@@ -8,7 +10,29 @@ interface SynthesizeSpeechProps {
   audioEncoding?: "AUDIO_ENCODING_UNSPECIFIED" | "LINEAR16" | "MP3" | "OGG_OPUS"
 }
 
-// Simplified TTS service without Google Cloud dependency for MVP
+let ttsClient: TextToSpeechClient | null = null
+
+function initializeTtsClient() {
+  if (ttsClient) {
+    return ttsClient
+  }
+
+  const credentialsJson = process.env.GOOGLE_TTS_CREDENTIALS
+  if (!credentialsJson) {
+    console.error("GOOGLE_TTS_CREDENTIALS environment variable is not set.")
+    throw new Error("TTS service is not configured.")
+  }
+
+  try {
+    const credentials = JSON.parse(credentialsJson)
+    ttsClient = new TextToSpeechClient({ credentials })
+    return ttsClient
+  } catch (error) {
+    console.error("Failed to parse GOOGLE_TTS_CREDENTIALS or initialize TTS client:", error)
+    throw new Error("TTS service initialization failed.")
+  }
+}
+
 export async function synthesizeSpeech({
   text,
   languageCode = "es-US",
@@ -17,16 +41,29 @@ export async function synthesizeSpeech({
   audioEncoding = "MP3",
 }: SynthesizeSpeechProps): Promise<{ success: boolean; audioUrl?: string; error?: string }> {
   try {
-    // For MVP, we'll use browser's built-in speech synthesis
-    // In production, you would implement actual TTS service
-    console.log(`TTS request for: "${text}" with voice: ${voiceName}`)
+    const client = initializeTtsClient()
 
-    // Return a placeholder response for now
-    return {
-      success: true,
-      audioUrl: `/placeholder-audio.mp3`,
-      error: undefined,
+    const request = {
+      input: { text: text },
+      voice: { languageCode: languageCode, name: voiceName, ssmlGender: ssmlGender },
+      audioConfig: { audioEncoding: audioEncoding as any },
     }
+
+    console.log(`Synthesizing speech for text: "${text}" with voice: ${voiceName}`)
+    const [response] = await client.synthesizeSpeech(request)
+
+    if (!response.audioContent) {
+      console.error("TTS synthesis failed, no audio content received.")
+      return { success: false, error: "TTS synthesis failed, no audio content." }
+    }
+
+    // Convert to base64 data URL
+    const audioBuffer = response.audioContent as Buffer
+    const base64Audio = audioBuffer.toString("base64")
+    const dataUrl = `data:audio/mp3;base64,${base64Audio}`
+
+    console.log(`Audio synthesized successfully`)
+    return { success: true, audioUrl: dataUrl }
   } catch (error) {
     console.error("Error in synthesizeSpeech:", error)
     return {
@@ -40,16 +77,9 @@ export async function getAvailableGoogleTTSVoices(
   languageCode?: string,
 ): Promise<{ success: boolean; voices?: any[]; error?: string }> {
   try {
-    // Return mock voices for MVP
-    const mockVoices = [
-      { name: "es-ES-Neural2-A", gender: "FEMALE", region: "Spain" },
-      { name: "es-ES-Neural2-B", gender: "MALE", region: "Spain" },
-      { name: "es-US-Neural2-A", gender: "FEMALE", region: "US" },
-      { name: "es-US-Neural2-B", gender: "MALE", region: "US" },
-      { name: "es-MX-Neural2-A", gender: "FEMALE", region: "Mexico" },
-    ]
-
-    return { success: true, voices: mockVoices }
+    const client = initializeTtsClient()
+    const [response] = await client.listVoices({ languageCode })
+    return { success: true, voices: response.voices || [] }
   } catch (error) {
     console.error("Error fetching available voices:", error)
     return {
@@ -59,11 +89,10 @@ export async function getAvailableGoogleTTSVoices(
   }
 }
 
-// Example Spanish voices (for reference)
+// Spanish voices for the platform
 export const commonSpanishVoices = [
   { name: "es-ES-Neural2-A", gender: "FEMALE", region: "Spain" },
   { name: "es-ES-Neural2-B", gender: "MALE", region: "Spain" },
-  { name: "es-ES-Neural2-F", gender: "MALE", region: "Spain" },
   { name: "es-US-Neural2-A", gender: "FEMALE", region: "US" },
   { name: "es-US-Neural2-B", gender: "MALE", region: "US" },
   { name: "es-MX-Neural2-A", gender: "FEMALE", region: "Mexico" },

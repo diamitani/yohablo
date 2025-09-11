@@ -1,201 +1,153 @@
 "use client"
 
-import type { WorksheetItem } from "@/components/worksheet-content"
 import { Button } from "@/components/ui/button"
-import { Printer } from "lucide-react"
+import { Printer, Download } from "lucide-react"
+import { useRef } from "react"
 
 interface PrintableWorksheetProps {
   title: string
-  content: WorksheetItem[]
-  category?: string
+  content: any[]
+  category: string
 }
 
 export function PrintableWorksheet({ title, content, category }: PrintableWorksheetProps) {
+  const printRef = useRef<HTMLDivElement>(null)
+
   const handlePrint = () => {
     window.print()
   }
 
+  const handleDownloadPDF = async () => {
+    try {
+      // Dynamic import to avoid SSR issues
+      const html2pdf = (await import("html2pdf.js")).default
+
+      const element = printRef.current
+      if (!element) return
+
+      const opt = {
+        margin: 1,
+        filename: `${title.replace(/\s+/g, "-").toLowerCase()}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      }
+
+      html2pdf().set(opt).from(element).save()
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      // Fallback to print
+      handlePrint()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Print Button - Hidden when printing */}
-      <div className="print:hidden sticky top-4 z-10 flex justify-end p-4">
+      {/* Print Controls - Hidden when printing */}
+      <div className="no-print fixed top-4 right-4 z-10 flex gap-2">
         <Button onClick={handlePrint} className="flex items-center gap-2">
           <Printer className="h-4 w-4" />
-          Print Worksheet
+          Print
+        </Button>
+        <Button onClick={handleDownloadPDF} variant="outline" className="flex items-center gap-2 bg-transparent">
+          <Download className="h-4 w-4" />
+          Download PDF
         </Button>
       </div>
 
       {/* Printable Content */}
-      <div className="max-w-4xl mx-auto p-8 print:p-6">
+      <div ref={printRef} className="max-w-4xl mx-auto p-8 bg-white">
         {/* Header */}
-        <div className="text-center mb-8 print:mb-6">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-8 h-8 bg-blue-500 rounded"></div>
-            <h1 className="text-2xl font-bold text-gray-900">Yo Hablo</h1>
-            <div className="w-8 h-8 bg-purple-500 rounded"></div>
-          </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">{title}</h2>
-          {category && <p className="text-sm text-gray-600 uppercase tracking-wide font-medium">{category}</p>}
-          <div className="border-b-2 border-gray-300 mt-4"></div>
+        <div className="text-center mb-8 border-b-2 border-gray-300 pb-4">
+          <h1 className="text-2xl font-bold mb-2">Yo Hablo - Spanish Learning</h1>
+          <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
+          <p className="text-sm text-gray-500 mt-2">Category: {category}</p>
         </div>
 
-        {/* Student Information */}
-        <div className="mb-8 print:mb-6 p-4 border border-gray-300 rounded-lg print:rounded-none">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <label className="font-medium text-gray-700">Student Name:</label>
-              <div className="border-b border-gray-400 h-6 mt-1"></div>
-            </div>
-            <div>
-              <label className="font-medium text-gray-700">Date:</label>
-              <div className="border-b border-gray-400 h-6 mt-1"></div>
-            </div>
+        {/* Student Info */}
+        <div className="mb-6 grid grid-cols-2 gap-4">
+          <div className="border-b border-gray-300 pb-1">
+            <span className="text-sm font-medium">Name: </span>
+            <span className="inline-block w-48 border-b border-gray-400"></span>
+          </div>
+          <div className="border-b border-gray-300 pb-1">
+            <span className="text-sm font-medium">Date: </span>
+            <span className="inline-block w-32 border-b border-gray-400"></span>
+          </div>
+          <div className="border-b border-gray-300 pb-1">
+            <span className="text-sm font-medium">Teacher: </span>
+            <span className="inline-block w-48 border-b border-gray-400"></span>
+          </div>
+          <div className="border-b border-gray-300 pb-1">
+            <span className="text-sm font-medium">Period: </span>
+            <span className="inline-block w-32 border-b border-gray-400"></span>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="mb-8 print:mb-6 p-4 bg-gray-50 print:bg-white print:border print:border-gray-300 rounded-lg print:rounded-none">
-          <h3 className="font-bold text-gray-800 mb-2">Instructions:</h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            Complete each sentence by filling in the blank with the correct Spanish word or phrase. Write your answers
-            clearly in the spaces provided. Use the context clues in each sentence to help you determine the correct
-            answer.
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold mb-2">Instructions:</h3>
+          <p className="text-sm">
+            Fill in the blanks with the correct Spanish words. Listen to the audio if available, or use your knowledge
+            from the lesson.
           </p>
         </div>
 
         {/* Questions */}
-        <div className="space-y-6 print:space-y-4">
+        <div className="space-y-6">
           {content.map((item, index) => (
-            <div key={item.id} className="flex gap-4 print:break-inside-avoid">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 print:bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-blue-800 print:text-gray-800">{index + 1}</span>
+            <div key={item.id} className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-semibold">{index + 1}</span>
               </div>
-              <div className="flex-1 space-y-3">
+              <div className="flex-1">
                 <div
-                  className="text-base leading-relaxed text-gray-800 print:text-black"
+                  className="mb-3 text-sm leading-relaxed"
                   dangerouslySetInnerHTML={{
                     __html: item.question
-                      .replace(/\$\$(\d+)\$\$/g, "<strong>($1)</strong>")
-                      .replace(
-                        /_+/g,
-                        '<span style="border-bottom: 2px solid #000; display: inline-block; min-width: 80px; margin: 0 4px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>',
-                      ),
+                      .replace(/\$\$(\d+)\$\$/g, '<span class="font-bold">($1)</span>')
+                      .replace(/_+/g, '<span class="inline-block w-24 border-b-2 border-gray-400 mx-1"></span>'),
                   }}
                 />
-                {/* Answer space for longer responses */}
-                <div className="mt-2">
-                  <div className="border-b-2 border-gray-400 h-6"></div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Answer:</span>
+                  <span className="inline-block w-32 border-b-2 border-gray-400"></span>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Answer Key Section (on separate page when printed) */}
-        <div className="mt-12 print:mt-8 print:break-before-page">
-          <div className="border-t-2 border-gray-300 pt-8 print:pt-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 print:mb-4 text-center">Answer Key</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-4 print:gap-2">
-              {content.map((item, index) => (
-                <div key={`answer-${item.id}`} className="flex items-center gap-3 text-sm">
-                  <span className="font-bold text-blue-600 print:text-black w-6">{index + 1}.</span>
-                  <span className="font-medium text-gray-800 print:text-black">{item.answer}</span>
-                </div>
-              ))}
-            </div>
+        {/* Answer Key (on separate page when printing) */}
+        <div className="mt-12 page-break-before">
+          <h3 className="text-lg font-bold mb-4 text-center border-b-2 border-gray-300 pb-2">Answer Key</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {content.map((item, index) => (
+              <div key={`answer-${item.id}`} className="flex items-center gap-2 text-sm">
+                <span className="font-semibold w-6">{index + 1}.</span>
+                <span className="font-medium">{item.answer}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-12 print:mt-8 text-center text-xs text-gray-500 print:text-black border-t border-gray-200 pt-4">
+        <div className="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-500">
           <p>© Yo Hablo - Spanish Learning Platform | www.yohablo.com</p>
-          <p className="mt-1">For more interactive lessons and audio pronunciation, visit our website.</p>
         </div>
       </div>
 
-      {/* Print-specific styles */}
-      <style jsx global>{`
+      {/* Print Styles */}
+      <style jsx>{`
         @media print {
-          @page {
-            margin: 0.75in;
-            size: letter;
-          }
-          
-          body {
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
-          
-          .print\\:break-before-page {
-            page-break-before: always;
-          }
-          
-          .print\\:break-inside-avoid {
-            page-break-inside: avoid;
-          }
-          
-          .print\\:hidden {
+          .no-print {
             display: none !important;
           }
-          
-          .print\\:bg-white {
-            background-color: white !important;
+          .page-break-before {
+            page-break-before: always;
           }
-          
-          .print\\:bg-gray-100 {
-            background-color: #f3f4f6 !important;
-          }
-          
-          .print\\:border {
-            border: 1px solid #d1d5db !important;
-          }
-          
-          .print\\:border-gray-300 {
-            border-color: #d1d5db !important;
-          }
-          
-          .print\\:text-black {
-            color: black !important;
-          }
-          
-          .print\\:text-gray-800 {
-            color: #1f2937 !important;
-          }
-          
-          .print\\:rounded-none {
-            border-radius: 0 !important;
-          }
-          
-          .print\\:p-6 {
-            padding: 1.5rem !important;
-          }
-          
-          .print\\:mb-6 {
-            margin-bottom: 1.5rem !important;
-          }
-          
-          .print\\:mb-4 {
-            margin-bottom: 1rem !important;
-          }
-          
-          .print\\:mt-8 {
-            margin-top: 2rem !important;
-          }
-          
-          .print\\:pt-6 {
-            padding-top: 1.5rem !important;
-          }
-          
-          .print\\:space-y-4 > * + * {
-            margin-top: 1rem !important;
-          }
-          
-          .print\\:grid-cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          }
-          
-          .print\\:gap-2 {
-            gap: 0.5rem !important;
+          body {
+            -webkit-print-color-adjust: exact;
           }
         }
       `}</style>

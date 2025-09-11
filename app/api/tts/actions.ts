@@ -1,39 +1,99 @@
 "use server"
 
-// Mock TTS service for development - ensures audio always works
-const mockTTSService = {
-  async generateAudio(
-    text: string,
-    voice = "es-US-Neural2-A",
-  ): Promise<{
-    success: boolean
-    audioUrl?: string
-    error?: string
-  }> {
-    console.log(`[Mock TTS] Generating audio for: "${text}" with voice: ${voice}`)
+import { synthesizeSpeech, commonSpanishVoices } from "@/lib/services/google-tts-service"
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 500))
+// Pre-recorded audio mapping from the knowledge base
+const AUDIO_FILES: Record<string, string> = {
+  // Numbers
+  cero: "/audio/numbers/cero.mp3",
+  uno: "/audio/numbers/uno.mp3",
+  dos: "/audio/numbers/dos.mp3",
+  tres: "/audio/numbers/tres.mp3",
+  cuatro: "/audio/numbers/cuatro.mp3",
+  cinco: "/audio/numbers/cinco.mp3",
+  seis: "/audio/numbers/seis.mp3",
+  siete: "/audio/numbers/siete.mp3",
+  ocho: "/audio/numbers/ocho.mp3",
+  nueve: "/audio/numbers/nueve.mp3",
+  diez: "/audio/numbers/diez.mp3",
+  once: "/audio/numbers/once.mp3",
+  doce: "/audio/numbers/doce.mp3",
+  trece: "/audio/numbers/trece.mp3",
+  catorce: "/audio/numbers/catorce.mp3",
+  quince: "/audio/numbers/quince.mp3",
+  dieciseis: "/audio/numbers/dieciseis.mp3",
+  diecisiete: "/audio/numbers/diecisiete.mp3",
+  dieciocho: "/audio/numbers/dieciocho.mp3",
+  diecinueve: "/audio/numbers/diecinueve.mp3",
+  veinte: "/audio/numbers/veinte.mp3",
+  treinta: "/audio/numbers/treinta.mp3",
+  cuarenta: "/audio/numbers/cuarenta.mp3",
+  cincuenta: "/audio/numbers/cincuenta.mp3",
+  sesenta: "/audio/numbers/sesenta.mp3",
+  setenta: "/audio/numbers/setenta.mp3",
+  ochenta: "/audio/numbers/ochenta.mp3",
+  noventa: "/audio/numbers/noventa.mp3",
+  cien: "/audio/numbers/cien.mp3",
 
-    // Create a data URL for a simple beep sound (ensures audio always works)
-    const audioContext = new (globalThis.AudioContext || (globalThis as any).webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
+  // Colors
+  rojo: "/audio/colors/rojo.mp3",
+  azul: "/audio/colors/azul.mp3",
+  verde: "/audio/colors/verde.mp3",
+  amarillo: "/audio/colors/amarillo.mp3",
+  negro: "/audio/colors/negro.mp3",
+  blanco: "/audio/colors/blanco.mp3",
+  morado: "/audio/colors/morado.mp3",
+  rosa: "/audio/colors/rosa.mp3",
+  gris: "/audio/colors/gris.mp3",
+  marrón: "/audio/colors/marron.mp3",
+  anaranjado: "/audio/colors/anaranjado.mp3",
 
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
+  // Pronouns
+  yo: "/audio/pronouns/yo.mp3",
+  tú: "/audio/pronouns/tu.mp3",
+  él: "/audio/pronouns/el.mp3",
+  ella: "/audio/pronouns/ella.mp3",
+  nosotros: "/audio/pronouns/nosotros.mp3",
+  vosotros: "/audio/pronouns/vosotros.mp3",
+  ellos: "/audio/pronouns/ellos.mp3",
+  ellas: "/audio/pronouns/ellas.mp3",
+  usted: "/audio/pronouns/usted.mp3",
+  me: "/audio/pronouns/me.mp3",
+  te: "/audio/pronouns/te.mp3",
+  lo: "/audio/pronouns/lo.mp3",
+  la: "/audio/pronouns/la.mp3",
+  nos: "/audio/pronouns/nos.mp3",
+  los: "/audio/pronouns/los.mp3",
+  las: "/audio/pronouns/las.mp3",
 
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime) // A4 note
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+  // Places
+  casa: "/audio/places/casa.mp3",
+  escuela: "/audio/places/escuela.mp3",
+  parque: "/audio/places/parque.mp3",
+  tienda: "/audio/places/tienda.mp3",
+  banco: "/audio/places/banco.mp3",
+  iglesia: "/audio/places/iglesia.mp3",
+  hospital: "/audio/places/hospital.mp3",
+  restaurante: "/audio/places/restaurante.mp3",
+  biblioteca: "/audio/places/biblioteca.mp3",
+  cine: "/audio/places/cine.mp3",
+  "oficina de correos": "/audio/places/oficina-correos.mp3",
 
-    // For now, return a mock data URL that will work
-    const mockAudioUrl = `data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT`
-
-    return {
-      success: true,
-      audioUrl: mockAudioUrl,
-    }
-  },
+  // Verbs
+  hablar: "/audio/verbs/hablar.mp3",
+  comer: "/audio/verbs/comer.mp3",
+  vivir: "/audio/verbs/vivir.mp3",
+  ser: "/audio/verbs/ser.mp3",
+  estar: "/audio/verbs/estar.mp3",
+  tener: "/audio/verbs/tener.mp3",
+  hacer: "/audio/verbs/hacer.mp3",
+  ir: "/audio/verbs/ir.mp3",
+  caminar: "/audio/verbs/caminar.mp3",
+  estudiar: "/audio/verbs/estudiar.mp3",
+  beber: "/audio/verbs/beber.mp3",
+  leer: "/audio/verbs/leer.mp3",
+  escribir: "/audio/verbs/escribir.mp3",
+  abrir: "/audio/verbs/abrir.mp3",
 }
 
 interface TTSRequest {
@@ -41,7 +101,6 @@ interface TTSRequest {
   voice?: string
   languageCode?: string
   ssmlGender?: "FEMALE" | "MALE" | "NEUTRAL"
-  provider?: string
 }
 
 interface TTSResponse {
@@ -60,81 +119,55 @@ export async function generateTTS({
   try {
     console.log(`Generating TTS for text: "${text}" with voice: ${voice}`)
 
-    // Check if we have Google TTS credentials
-    const hasGoogleCredentials = process.env.GOOGLE_TTS_CREDENTIALS ? true : false
-
-    if (!hasGoogleCredentials) {
-      console.log("[TTS] No Google TTS credentials found, using mock TTS service")
-      const result = await mockTTSService.generateAudio(text, voice)
+    // Check if we have a pre-recorded file first
+    const normalizedText = text.toLowerCase().trim()
+    if (AUDIO_FILES[normalizedText]) {
+      console.log(`Using pre-recorded audio for: ${normalizedText}`)
       return {
-        ...result,
-        provider: "mock_tts",
+        success: true,
+        audioUrl: AUDIO_FILES[normalizedText],
+        provider: "pre_recorded",
       }
     }
 
-    // Try Google TTS if credentials are available
-    try {
-      const { TextToSpeechClient } = await import("@google-cloud/text-to-speech")
+    // Use Google Cloud TTS for dynamic generation
+    const result = await synthesizeSpeech({
+      text,
+      voiceName: voice,
+      languageCode,
+      ssmlGender,
+      audioEncoding: "MP3",
+    })
 
-      const client = new TextToSpeechClient({
-        credentials: JSON.parse(process.env.GOOGLE_TTS_CREDENTIALS!),
-      })
-
-      const request = {
-        input: { text },
-        voice: {
-          languageCode: languageCode,
-          name: voice,
-          ssmlGender: ssmlGender as any,
-        },
-        audioConfig: {
-          audioEncoding: "MP3" as any,
-          speakingRate: 0.9,
-          pitch: 0,
-        },
-      }
-
-      const [response] = await client.synthesizeSpeech(request)
-
-      if (!response.audioContent) {
-        throw new Error("No audio content received from Google TTS")
-      }
-
-      // Convert audio content to base64 data URL
-      const audioBase64 = Buffer.from(response.audioContent as Uint8Array).toString("base64")
-      const audioUrl = `data:audio/mp3;base64,${audioBase64}`
-
+    if (result.success) {
       return {
         success: true,
-        audioUrl,
+        audioUrl: result.audioUrl,
         provider: "google_cloud_tts",
       }
-    } catch (googleError) {
-      console.error("[TTS] Google TTS failed, falling back to mock service:", googleError)
-      const result = await mockTTSService.generateAudio(text, voice)
+    } else {
       return {
-        ...result,
-        provider: "mock_tts_fallback",
+        success: false,
+        error: result.error || "TTS generation failed.",
+        provider: "google_cloud_tts",
       }
     }
   } catch (error) {
     console.error("Error in generateTTS action:", error)
-
-    // Always fallback to mock service to ensure audio works
-    try {
-      const result = await mockTTSService.generateAudio(text, voice)
-      return {
-        ...result,
-        provider: "mock_tts_error_fallback",
-      }
-    } catch (mockError) {
-      return {
-        success: false,
-        error: `All TTS services failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        provider: "failed",
-      }
+    return {
+      success: false,
+      error: `Failed to generate TTS: ${error instanceof Error ? error.message : "Unknown error"}`,
+      provider: "google_cloud_tts",
     }
   }
+}
+
+export async function getAvailableVoices(): Promise<{ id: string; name: string; provider: string }[]> {
+  return commonSpanishVoices.map((voice) => ({
+    id: voice.name,
+    name: `${voice.name.includes("ES") ? "Spain" : voice.name.includes("MX") ? "Mexico" : "US"} ${voice.gender === "FEMALE" ? "Female" : "Male"}`,
+    provider: "google",
+  }))
 }
 
 export async function generateVocabularyAudio(
@@ -144,8 +177,7 @@ export async function generateVocabularyAudio(
 ): Promise<TTSResponse> {
   try {
     console.log(`Generating vocabulary audio for word: "${word}"`)
-
-    const selectedVoice = voiceName || (languageCode.startsWith("es-ES") ? "es-ES-Neural2-A" : "es-US-Neural2-A")
+    const selectedVoice = voiceName || "es-US-Neural2-A"
     const gender = selectedVoice.includes("Neural2-A") ? "FEMALE" : "MALE"
 
     return await generateTTS({
@@ -163,26 +195,4 @@ export async function generateVocabularyAudio(
   }
 }
 
-export async function getAvailableVoices(
-  languageCode?: string,
-): Promise<{ success: boolean; voices?: any[]; error?: string; provider?: string }> {
-  // Return a list of available Spanish voices
-  const spanishVoices = [
-    { name: "es-US-Neural2-A", ssmlGender: "FEMALE", naturalSampleRateHertz: 24000 },
-    { name: "es-US-Neural2-B", ssmlGender: "MALE", naturalSampleRateHertz: 24000 },
-    { name: "es-US-Neural2-C", ssmlGender: "FEMALE", naturalSampleRateHertz: 24000 },
-    { name: "es-ES-Neural2-A", ssmlGender: "FEMALE", naturalSampleRateHertz: 24000 },
-    { name: "es-ES-Neural2-B", ssmlGender: "MALE", naturalSampleRateHertz: 24000 },
-    { name: "es-MX-Neural2-A", ssmlGender: "FEMALE", naturalSampleRateHertz: 24000 },
-    { name: "es-MX-Neural2-B", ssmlGender: "MALE", naturalSampleRateHertz: 24000 },
-  ]
-
-  return {
-    success: true,
-    voices: spanishVoices,
-    provider: "static_voice_list",
-  }
-}
-
-// Export alias for backward compatibility
 export const generateVocabularyTTS = generateVocabularyAudio
